@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>𝐯𝐢𝐚 の 預 約 表 單</title>
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@200..900&display=swap" rel="stylesheet">
+    <!-- 引入 LIFF SDK -->
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+    
+    <style>
+        body {
+            font-family: 'Noto Serif TC', serif;
+            max-width: 400px;
+            margin: auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            display: block;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            font-size: 18px;
+            color: white;
+            background-color: #333;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+        button:hover {
+            background-color: #555;
+        }
+        .calendar-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-top: 15px;
+        }
+        .calendar div {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .calendar div:hover {
+            background-color: #eee;
+        }
+        .selected {
+            background-color: red !important;
+            color: white !important;
+        }
+        .disabled {
+            pointer-events: none;
+            background-color: #f0f0f0;
+            color: #ccc;
+        }
+        .time-select-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+        .time-select {
+            width: 100%;
+        }
+        /* 月份顯示與箭頭對齊樣式 */
+        .month-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+        .arrow-button {
+            font-size: 20px;
+            cursor: pointer;
+            user-select: none;
+            margin: 0 20px;
+            color: #007bff;
+        }
+        .month-text {
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body> 
+  
+    <label for="stylist">* 設 計 師</label>
+    <select id="stylist">
+        <option value="" selected>請選擇設計師</option>
+        <option value="不指定設計師">不指定設計師</option>
+        <option value="Michelle">Michelle</option>
+        <option value="Mia">Mia</option>
+    </select>
+
+    <label for="date">* 預 約 日 期</label>
+    <div class="calendar-container">
+        <div class="month-container">
+            <!-- 月份顯示與箭頭 -->
+            <span class="arrow-button" id="prev-month">&#9664;</span>
+            <span class="month-text" id="month-display">2月</span>
+            <span class="arrow-button" id="next-month">&#9654;</span>
+        </div>
+
+        <div id="calendar" class="calendar"></div>
+        <input type="hidden" id="selectedDate">
+    </div>
+    
+    <label for="time">* 預 約 時 間</label>
+    <div class="time-select-container">
+        <select id="time" class="time-select">
+            <!-- 時間選擇選項將在 JavaScript 生成 -->
+        </select>
+    </div>
+
+    <label for="name">* 您 的 姓 名　▃ 若初次預約 請填寫本名 :) ▃</label>
+    <input type="text" id="name" placeholder="">
+
+    <label for="phone">* 您 的 電 話</label>
+    <input type="text" id="phone" placeholder="">
+
+<label for="service">* 服 務 項 目</label>
+<select id="service">
+    <option value="" selected disabled>請選擇服務項目</option>
+    <option value="洗髮">[洗髮] 造型+基礎保養</option>
+    <option value="剪髮">[剪髮] 洗+基礎保養</option>
+    <option value="兒童剪髮">[兒童剪髮] 可洗或不洗</option>    
+    <option value="染髮">[染髮] 洗+基礎保養</option>
+    <option value="補髮根">[補髮根] 洗+基礎保養</option>    
+    <option value="燙髮">[燙髮] 剪+基礎保養</option>
+    <option value="護髮">[護髮] 洗+深層保養</option>
+    <option value="頭皮">[頭皮] 洗+基礎保養</option>
+    <option value="其它">[其他] 在下方備註填寫</option>
+    <option value="----">-----[組合套組]-----</option>    
+    <option value="A組合">[A組合]:剪+護</option>    
+    <option value="B組合">[B組合]:剪+染</option>    
+    <option value="C組合">[C組合]:補髮根+護</option>    
+    <option value="D組合">[D組合]:燙+護</option>    
+    <option value="E組合">[E組合]:燙+染</option>    
+</select>
+
+    <label for="remarks">備 註</label>
+    <textarea id="remarks" rows="2" placeholder="若有其他需求，請在此填寫"></textarea>
+
+    <button onclick="submitReservation()">確認送出</button>
+
+<script>
+// 設計師的休假日期
+const holidays = {
+    "Michelle": [
+        "2025-04-02", "2025-04-03", "2025-04-06", "2025-04-09", "2025-04-14", 
+        "2025-04-15", "2025-04-17", "2025-04-22", "2025-04-23", "2025-04-28", "2025-04-29",
+        "2025-03-02", "2025-03-03", "2025-03-04", "2025-03-11", "2025-03-12", 
+        "2025-03-19", "2025-03-22", "2025-03-23", "2025-03-26", "2025-03-27"
+    ],
+    "Mia": [
+        "2025-03-01", "2025-03-04", "2025-03-08", "2025-03-11", "2025-03-12", "2025-03-19", "2025-03-22", "2025-03-26", "2025-03-27", "2025-03-28", "2025-03-29"
+    ],
+    "不指定設計師": [
+        "2025-03-04", "2025-03-11", "2025-03-12", "2025-03-19", "2025-03-22", "2025-03-26", "2025-03-27"
+    ]
+};
+
+
+    let currentMonth = new Date().getMonth();
+    let currentYear = new Date().getFullYear();
+
+    // 更新月曆
+    function generateCalendar() {
+        const month = currentMonth;
+        const year = currentYear;
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const firstDayOfMonth = new Date(year, month, 1).getDay();
+        const today = new Date();  // 當天的日期
+        today.setHours(0, 0, 0, 0);  // 只保留日期，不包含時間
+        const selectedStylist = document.getElementById("stylist").value;
+
+        // 清空月曆
+        $('#calendar').empty();
+
+        // 顯示週日到週六
+        const daysOfWeek = ["日", "一", "二", "三", "四", "五", "六"];
+        daysOfWeek.forEach(day => {
+            $('#calendar').append('<div style="text-align:center; font-weight:bold">' + day + '</div>');
+        });
+
+        // 空白填充，確保日期排正確
+        for (let i = 0; i < firstDayOfMonth; i++) {
+            $('#calendar').append('<div></div>');
+        }
+
+        // 填充日期並設置禁用過去的日期和休假日期
+        for (let day = 1; day <= daysInMonth; day++) {
+            const date = new Date(year, month, day);
+            const isPastDate = date < today; // 判斷是否是過去的日期
+            const formattedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const isHoliday = holidays[selectedStylist] && holidays[selectedStylist].includes(formattedDate);
+            const className = isPastDate || isHoliday ? 'disabled' : 'calendar-day'; // 給過去的日期和休假日期加上禁用樣式
+
+            $('#calendar').append(`<div class="${className}" data-day="${day}" data-date="${formattedDate}">${day}</div>`);
+        }
+
+        // 點擊日期選擇
+        $(".calendar-day").on('click', function() {
+            if (!$(this).hasClass("disabled")) {
+                $(".calendar-day").removeClass("selected");
+                $(this).addClass("selected");
+                const selectedDay = $(this).data("day");
+                const selectedDate = $(this).data("date");
+                $("#selectedDate").val(selectedDate);
+            }
+        });
+
+        // 更新月份顯示
+        document.getElementById("month-display").textContent = `${month + 1} 月`;
+    }
+
+    // 切換月份
+    $("#prev-month").click(function() {
+        currentMonth = (currentMonth === 0) ? 11 : currentMonth - 1;
+        if (currentMonth === 11) {
+            currentYear--;
+        }
+        generateCalendar();
+    });
+
+    $("#next-month").click(function() {
+        currentMonth = (currentMonth === 11) ? 0 : currentMonth + 1;
+        if (currentMonth === 0) {
+            currentYear++;
+        }
+        generateCalendar();
+    });
+
+    // 生成時間選擇方塊
+    function generateTimeOptions() {
+        const startTime = 10; // 10:00
+        const endTime = 18; // 18:00
+        const timeSelect = document.getElementById("time");
+
+        // 清空時間選項
+        timeSelect.innerHTML = "";
+
+        for (let hour = startTime; hour <= endTime; hour++) {
+            const hour24 = String(hour).padStart(2, '0'); // 確保時間格式是24小時，並補足前導零
+            const times = [
+                `${hour24}:00`,  // 以24小時制顯示
+                `${hour24}:30`   // 以24小時制顯示
+            ];
+
+        // 移除 18:30 時段
+        if (hour === 18) {
+            times.pop(); // 只保留到 18:00
+        }            
+            
+            times.forEach(time => {
+                const option = document.createElement("option");
+                option.value = time;
+                option.text = time;
+                timeSelect.appendChild(option);
+            });
+        }
+    }
+
+    // 設置設計師選擇事件，更新月曆
+    $('#stylist').change(function() {
+        generateCalendar();
+    });
+
+    
+    // 預設初始化月曆
+    generateCalendar();
+    generateTimeOptions();
+    
+document.addEventListener("DOMContentLoaded", function () {
+    // 初始化 LIFF
+    liff.init({ liffId: "2006886942-gQ2J88nv" })
+        .then(() => {
+            // 檢查是否已登入
+            if (liff.isLoggedIn()) {
+                // 取得使用者的資料
+                liff.getProfile().then(profile => {
+                    // 將 LINE 的暱稱填入表單中的名稱欄位
+                    document.getElementById("name").value = profile.displayName;
+                }).catch(err => {
+                    console.error("取得 profile 失敗", err);
+                });
+            } else {
+                // 若未登入則跳轉到登入頁面
+                liff.login();
+            }
+        })
+        .catch(err => {
+            console.error("LIFF 初始化失敗", err);
+        });
+});
+
+async function submitReservation() {
+    try {
+        await liff.init({ liffId: "2006886942-gQ2J88nv" });
+
+        if (!liff.isLoggedIn()) {
+            liff.login();
+            return;
+        }
+
+        const stylist = document.getElementById("stylist").value;
+        const name = document.getElementById("name").value;
+        const phone = document.getElementById("phone").value;
+        const service = document.getElementById("service").value;
+        const date = document.getElementById("selectedDate").value;
+        const time = document.getElementById("time").value;
+        const remarks = document.getElementById("remarks").value;
+
+        if (!stylist || !name || !phone || !service || !date || !time) {
+            alert("有欄位未填寫");
+            return;
+        }
+
+        const formattedDate = new Date(date);
+        const month = String(formattedDate.getMonth() + 1).padStart(2, '0');
+        const day = String(formattedDate.getDate()).padStart(2, '0');
+        const finalFormattedDate = `${month}/${day}`;
+        const finalTime = `${finalFormattedDate} ${time}`;
+
+const flexMessage = {
+    type: "flex",
+    altText: "[ 已填寫預約訊息，稍後確認通知。 ]",
+    contents: {
+        type: "bubble",
+        body: {
+            type: "box",
+            layout: "vertical",
+            spacing: "md",
+            contents: [
+                {
+                    type: "text",
+                    text: "𝘃𝗶𝗮 の 預 約 表 單",
+                    weight: "bold",
+                    size: "xxl",
+                    color: "#A3927CFF",
+                    align: "center",
+                    gravity: "center",
+                    style: "normal"
+                },
+                {
+                    type: "box",
+                    layout: "vertical",
+                    spacing: "sm",
+                    contents: [
+                        { type: "box", layout: "baseline", contents: [
+                            { type: "text", text: "設 計 師", weight: "bold", size: "lg", color: "#4B4744FF" },
+                            { type: "text", text: stylist, size: "md", color: "#9A8A77FF", flex: 1,wrap: true  }
+                        ]},
+                        { type: "box", layout: "baseline", contents: [
+                            { type: "text", text: "姓 名", weight: "bold", size: "lg", color: "#4B4744FF" },
+                            { type: "text", text: name, size: "md", color: "#9A8A77FF", flex: 1,wrap: true  }
+                        ]},
+                        { type: "box", layout: "baseline", contents: [
+                            { type: "text", text: "電 話", weight: "bold", size: "lg", color: "#4B4744FF" },
+                            { type: "text", text: phone, size: "md", color: "#9A8A77FF", flex: 1,wrap: true  }
+                        ]},
+                        { type: "box", layout: "baseline", contents: [
+                            { type: "text", text: "服 務 項 目", weight: "bold", size: "lg", color: "#4B4744FF" },
+                            { type: "text", text: service, size: "md", color: "#9A8A77FF", flex: 1,wrap: true  }
+                        ]},
+                        { type: "box", layout: "baseline", contents: [
+                            { type: "text", text: "預 約 時 間", weight: "bold", size: "lg", color: "#4B4744FF" },
+                            { type: "text", text: finalTime, size: "md", color: "#9A8A77FF", flex: 1,wrap: true  }
+                        ]},
+                        remarks ? { type: "box", layout: "baseline", contents: [
+                            { type: "text", text: "備 註", weight: "bold", size: "lg", color: "#4B4744FF" },
+                            { type: "text", text: remarks, size: "md", color: "#9A8A77FF", flex: 1,wrap: true  }
+                        ]} : null
+                    ].filter(Boolean)
+                }
+            ]
+        },
+        footer: {
+            type: "box",
+            layout: "vertical",
+            spacing: "xl",
+            margin: "sm",
+            backgroundColor: "#C7B39CFF",
+            borderColor: "#FFFFFFFF",
+            contents: [
+                {
+                    type: "text",
+                    text: "已接收訊息，稍後確認通知。",
+                    weight: "bold",
+                    size: "lg",
+                    color: "#FFFFFFFF",
+                    align: "center",
+                    gravity: "center",
+                    contents: []
+                }
+            ]
+        }
+    }
+};
+
+        await liff.sendMessages([flexMessage]);
+        liff.closeWindow();
+    } catch (err) {
+        console.error("發送訊息錯誤", err);
+    }
+}
+
+
+
+</script>
+
+</body>
+</html>
